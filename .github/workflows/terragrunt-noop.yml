@@ -1,0 +1,16 @@
+name: Terragrunt Action Workflow Test
+
+
+on:
+ workflow_dispatch:
+ push:
+  branches:
+  - main
+
+jobs:
+ terragrunt-job:
+    uses: girishcodealchemy/gh-actions-alchemy/.github/workflows/terragrunt-gcp-nonprod.yml@main
+    with:
+      workingDirectory: terragrunt-noop-module
+      environment: nonprod
+      runner: nonprod-linux-x64-medium
