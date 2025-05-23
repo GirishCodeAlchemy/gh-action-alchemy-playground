@@ -8,6 +8,12 @@ jobs:
   kaniko-build-push:
     uses: girishcodealchemy/gh-actions-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
     with:
+      runner: nonprod-linux-x64-medium
       workingDirectory: sample-nodejs-app
       environment: nonprod
-      imageName: gcr.io/YOUR_PROJECT_ID/sample-nodejs-app:latest
+      dockerfile: sample-nodejs-app/Dockerfile
+      context: sample-nodejs-app
+      registry: gcr.io/YOUR_PROJECT_ID
+      image: sample-nodejs-app
+      tag: latest
+      push: 'true'
