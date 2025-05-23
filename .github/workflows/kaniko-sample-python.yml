@@ -1,0 +1,13 @@
+# Sample Kaniko workflow for building and pushing the sample Python app
+name: Kaniko Action Workflow Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  kaniko-build-push:
+    uses: girishcodealchemy/gh-actions-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
+    with:
+      workingDirectory: sample-python-app
+      environment: nonprod
+      imageName: gcr.io/YOUR_PROJECT_ID/sample-python-app:latest

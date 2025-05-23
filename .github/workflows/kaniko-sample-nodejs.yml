@@ -1,0 +1,13 @@
+# Sample Kaniko workflow for building and pushing the sample Node.js app
+name: Kaniko Node.js Sample
+
+on:
+  workflow_dispatch:
+
+jobs:
+  kaniko-build-push:
+    uses: girishcodealchemy/gh-actions-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
+    with:
+      workingDirectory: sample-nodejs-app
+      environment: nonprod
+      imageName: gcr.io/YOUR_PROJECT_ID/sample-nodejs-app:latest
