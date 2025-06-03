@@ -1,0 +1,16 @@
+# Sample workflow to deploy a Helm chart using the custom Helm action
+name: Helm Deploy Sample
+
+on:
+  workflow_dispatch:
+
+jobs:
+  helm-deploy:
+    uses: girishcodealchemy/gh-actions-alchemy/.github/workflows/helm-deploy-nonprod.yml@main
+    with:
+      runner: nonprod-linux-x64-medium
+      cluster: my-gke-cluster
+      release: my-sample-release
+      chart: ./charts/sample-chart
+      namespace: default
+      values: ./charts/sample-chart/values.yaml
