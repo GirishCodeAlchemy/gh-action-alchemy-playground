@@ -14,3 +14,4 @@ jobs:
       chart: ./charts/sample-chart
       namespace: default
       values: ./charts/sample-chart/values.yaml
+      helm_opts: "--atomic --timeout 5m"
