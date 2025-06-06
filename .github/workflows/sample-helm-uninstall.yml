@@ -1,0 +1,12 @@
+name: Sample Helm Uninstall Playground
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-helm-uninstall:
+    uses: GirishCodeAlchemy/gh-action-alchemy/.github/workflows/helm-uninstall-reusable.yml@main
+    with:
+      release: "sample-release"
+      namespace: "default"
+      helm_opts: ""
