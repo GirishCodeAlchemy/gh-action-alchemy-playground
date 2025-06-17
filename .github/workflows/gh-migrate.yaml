@@ -1,0 +1,14 @@
+name: GitHub Migration Playground
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  github-migration:
+    uses: girishcodealchemy/gh-action-library/.github/workflows/github-migration.yml@main
+    with:
+      workingDirectory: scripts
+      runner: ubuntu-latest
