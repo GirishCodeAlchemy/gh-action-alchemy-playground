@@ -1,0 +1,59 @@
+name: Dynamic Dockerfile Build
+
+on:
+  push:
+    paths:
+      - '**/Dockerfile'
+  pull_request:
+    paths:
+      - '**/Dockerfile'
+  workflow_dispatch:
+
+jobs:
+  detect-changes:
+    runs-on: ${{ inputs.runner }}
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Detect Changed Dockerfiles
+        id: find-dockerfiles
+        run: |
+          # Get changed files and filter only Dockerfiles
+          changed_files=$(git diff --name-only ${{ github.event.before || 'HEAD^' }} ${{ github.sha }} | grep 'Dockerfile' || true)
+
+          # Prepare matrix entries
+          matrix='[]'
+          for file in $changed_files; do
+            dir=$(dirname "$file")
+            name=$(basename "$dir")
+            matrix=$(jq -c --arg dir "$dir" --arg image "$name" '. += [{"directory": $dir, "image": $image}]' <<< "$matrix")
+          done
+
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
+      - name: Output Changed Dockerfiles
+        run: echo "Matrix: ${{ steps.find-dockerfiles.outputs.matrix }}"
+
+  build-images:
+    needs: detect-changes
+    if: ${{ fromJson(needs.detect-changes.outputs.matrix) != [] }}
+    strategy:
+      matrix:
+        include: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+    uses: girishcodealchemy/gh-actions-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
+    with:
+      runner: nonprod-linux-x64-medium
+      workingDirectory: ${{ matrix.directory }}
+      environment: nonprod
+      dockerfile: ${{ matrix.directory }}/Dockerfile
+      context: ${{ matrix.directory }}
+      registry: gcr.io/YOUR_PROJECT_ID
+      image: ${{ matrix.image }}
+      tag: latest
+      push: 'true'
