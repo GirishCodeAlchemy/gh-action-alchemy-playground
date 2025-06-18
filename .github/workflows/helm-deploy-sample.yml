@@ -7,11 +7,16 @@ on:
 jobs:
   helm-deploy:
     uses: girishcodealchemy/gh-actions-alchemy/.github/workflows/helm-deploy-nonprod.yml@main
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     with:
       runner: nonprod-linux-x64-medium
+      project_id: sample-prj
       cluster: my-gke-cluster
       release: my-sample-release
       chart: ./charts/sample-chart
       namespace: default
       values: ./charts/sample-chart/values.yaml
       helm_opts: "--atomic --timeout 5m"
+    secrets: inherit

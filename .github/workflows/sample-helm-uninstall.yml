@@ -6,7 +6,15 @@ on:
 jobs:
   call-helm-uninstall:
     uses: GirishCodeAlchemy/gh-action-alchemy/.github/workflows/helm-uninstall-reusable.yml@main
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     with:
+      runner: nonprod-linux-x64-medium
+      project_id: sample-prj
+      cluster: my-gke-cluster
       release: "sample-release"
       namespace: "default"
       helm_opts: ""
+    secrets: inherit
+    

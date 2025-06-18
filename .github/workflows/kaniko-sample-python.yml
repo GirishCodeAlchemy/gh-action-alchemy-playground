@@ -7,6 +7,9 @@ on:
 jobs:
   kaniko-build-push:
     uses: girishcodealchemy/gh-actions-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     with:
       runner: nonprod-linux-x64-medium
       workingDirectory: sample-python-app
