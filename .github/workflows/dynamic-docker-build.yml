@@ -21,15 +21,19 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Detect Changed Dockerfiles
-        id: find-dockerfiles
+      - name: Set Matrix
+        id: set-matrix
         run: |
-          # Get changed files and filter only Dockerfiles
-          changed_files=$(git diff --name-only ${{ github.event.before || 'HEAD^' }} ${{ github.sha }} | grep 'Dockerfile' || true)
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "Triggered by manual dispatch — scanning all Dockerfiles."
+            files=$(find . -name 'Dockerfile')
+          else
+            echo "Triggered by push/PR — scanning changed Dockerfiles."
+            files=$(git diff --name-only ${{ github.event.before || 'HEAD^' }} ${{ github.sha }} | grep 'Dockerfile' || true)
+          fi
 
-          # Prepare matrix entries
           matrix='[]'
-          for file in $changed_files; do
+          for file in $files; do
             dir=$(dirname "$file")
             name=$(basename "$dir")
             matrix=$(jq -c --arg dir "$dir" --arg image "$name" '. += [{"directory": $dir, "image": $image}]' <<< "$matrix")
@@ -37,8 +41,8 @@ jobs:
 
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
-      - name: Output Changed Dockerfiles
-        run: echo "Matrix: ${{ steps.find-dockerfiles.outputs.matrix }}"
+      - name: Output Matrix
+        run: echo "Matrix: ${{ steps.set-matrix.outputs.matrix }}"
 
   build-images:
     needs: detect-changes
