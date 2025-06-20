@@ -48,7 +48,7 @@ jobs:
 
   build-images:
     needs: detect-changes
-    if: ${{ fromJson(needs.detect-changes.outputs.matrix).length() > 0 }}
+    if: ${{ fromJson(needs.detect-changes.outputs.matrix).size > 0 }}
     strategy:
       matrix:
         include: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
