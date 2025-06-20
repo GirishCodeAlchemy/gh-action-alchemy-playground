@@ -52,7 +52,7 @@ jobs:
     strategy:
       matrix:
         include: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
-    uses: girishcodealchemy/gh-actions-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
+    uses: girishcodealchemy/gh-action-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
     with:
       runner: nonprod-linux-x64-medium
       workingDirectory: ${{ matrix.directory }}
