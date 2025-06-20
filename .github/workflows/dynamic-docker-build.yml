@@ -47,6 +47,9 @@ jobs:
           echo "Matrix: ${{ steps.set-matrix.outputs.matrix }}"
 
   build-images:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     needs: detect-changes
     if: ${{ fromJson(needs.detect-changes.outputs.matrix).size > 0 }}
     strategy:
