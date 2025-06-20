@@ -50,7 +50,8 @@ jobs:
     needs: detect-changes
     if: ${{ fromJson(needs.detect-changes.outputs.matrix) && fromJson(needs.detect-changes.outputs.matrix).length > 0 }}
     strategy:
-      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+      matrix:
+        include: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
     uses: girishcodealchemy/gh-action-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
     with:
       runner: nonprod-linux-x64-medium
