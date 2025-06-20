@@ -61,5 +61,6 @@ jobs:
       context: ${{ matrix.directory }}
       registry: gcr.io/YOUR_PROJECT_ID
       image: ${{ matrix.image }}
+      imageName: ${{ matrix.image }}
       tag: ${{ matrix.tag }}
       push: 'true'
