@@ -25,11 +25,20 @@ jobs:
         id: set-matrix
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "Triggered by manual dispatch — scanning all Dockerfiles."
+            echo "Manual dispatch: scanning all Dockerfile directories."
             files=$(find . -name 'Dockerfile')
           else
-            echo "Triggered by push/PR — scanning changed Dockerfiles."
-            files=$(git diff --name-only ${{ github.event.before || 'HEAD^' }} ${{ github.sha }} | grep 'Dockerfile' || true)
+            echo "Push/PR: scanning directories with changed files."
+            # Get all changed files in the commit range
+            changed_files=$(git diff --name-only ${{ github.event.before || 'HEAD^' }} ${{ github.sha }})
+            # Get unique directories containing changed files or Dockerfile
+            dirs=$(echo "$changed_files" | awk -F/ '{OFS="/"; if (NF>1) print $1; else print "."}' | sort -u)
+            files=""
+            for dir in $dirs; do
+              if [[ -f "$dir/Dockerfile" ]]; then
+                files="$files $dir/Dockerfile"
+              fi
+            done
           fi
 
           matrix='[]'
@@ -57,6 +66,7 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+    name: Build Docker image for ${{ matrix.image }}
     uses: girishcodealchemy/gh-action-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
     with:
       runner: nonprod-linux-x64-medium
