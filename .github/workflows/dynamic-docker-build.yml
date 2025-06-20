@@ -11,7 +11,7 @@ on:
 
 jobs:
   detect-changes:
-    runs-on: ${{ inputs.runner }}
+    runs-on: ubuntu-latest
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -47,6 +47,7 @@ jobs:
           echo "Matrix: ${{ steps.set-matrix.outputs.matrix }}"
 
   build-images:
+    runs-on: ubuntu-latest
     permissions:
       contents: 'read'
       id-token: 'write'
