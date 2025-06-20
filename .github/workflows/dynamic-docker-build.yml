@@ -56,15 +56,17 @@ jobs:
     strategy:
       matrix:
         include: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
-    uses: girishcodealchemy/gh-action-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
-    with:
-      runner: nonprod-linux-x64-medium
-      workingDirectory: ${{ matrix.directory }}
-      environment: nonprod
-      dockerfile: ${{ matrix.directory }}/Dockerfile
-      context: ${{ matrix.directory }}
-      registry: gcr.io/YOUR_PROJECT_ID
-      image: ${{ matrix.image }}
-      imageName: ${{ matrix.image }}
-      tag: ${{ matrix.tag }}
-      push: 'true'
+    steps:
+      - name: Call Kaniko GCP Nonprod Workflow
+        uses: girishcodealchemy/gh-action-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
+        with:
+          runner: nonprod-linux-x64-medium
+          workingDirectory: ${{ matrix.directory }}
+          environment: nonprod
+          dockerfile: ${{ matrix.directory }}/Dockerfile
+          context: ${{ matrix.directory }}
+          registry: gcr.io/YOUR_PROJECT_ID
+          image: ${{ matrix.image }}
+          imageName: ${{ matrix.image }}
+          tag: ${{ matrix.tag }}
+          push: 'true'
