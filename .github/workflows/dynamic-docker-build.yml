@@ -35,8 +35,10 @@ jobs:
           matrix='[]'
           for file in $files; do
             dir=$(dirname "$file")
-            name=$(basename "$dir")
-            tag="${name}-${{ github.run_number }}"
+            parent_name=$(basename "$dir")
+            tag="${parent_name}-${{ github.run_number }}"
+            name="${dir#./}" # Use full directory path without leading ./
+            # tag="${name//\//-}-${{ github.run_number }}" # Replace / with - for tag
             matrix=$(jq -c --arg dir "$dir" --arg image "$name" --arg tag "$tag" '. += [{"directory": $dir, "image": $image, "tag": $tag}]' <<< "$matrix")
           done
 
@@ -50,6 +52,7 @@ jobs:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.matrix != '[]' && needs.detect-changes.outputs.matrix != '' }}
     strategy:
+      fail-fast: false
       matrix:
         include: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
     uses: girishcodealchemy/gh-action-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
