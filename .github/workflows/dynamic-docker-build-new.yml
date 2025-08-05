@@ -1,0 +1,92 @@
+name: Dynamic Dockerfile Build New
+
+on:
+  push:
+    paths:
+      - '**/Dockerfile'
+  pull_request:
+    paths:
+      - '**/Dockerfile'
+  workflow_dispatch:
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Matrix
+        id: set-matrix
+        run: |
+          echo "Detecting changed Dockerfiles..."
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "Manual run - detecting all Dockerfiles."
+            mapfile -t dockerfiles < <(find . -name 'Dockerfile')
+          else
+            echo "Push or PR event - detecting changed Dockerfiles."
+            before_sha="${{ github.event.before }}"
+            after_sha="${{ github.sha }}"
+            if [[ -z "$before_sha" ]]; then
+              before_sha=$(git rev-parse HEAD^)
+            fi
+            echo "Comparing changes from $before_sha to $after_sha"
+            mapfile -t changed_files < <(git diff --name-only "$before_sha" "$after_sha")
+
+            declare -A dockerfile_dirs=()
+            for file in "${changed_files[@]}"; do
+              dir=$(dirname "$file")
+              if [[ -f "$dir/Dockerfile" ]]; then
+                dockerfile_dirs["$dir"]=1
+              fi
+            done
+            dockerfiles=("${!dockerfile_dirs[@]/%//Dockerfile}")
+          fi
+
+          echo "Found Dockerfiles:"
+          printf '%s\n' "${dockerfiles[@]}"
+
+          matrix='[]'
+          for file in "${dockerfiles[@]}"; do
+            dir=$(dirname "$file")
+            parent_name=$(basename "$dir")
+            tag="${parent_name}-${{ github.run_number }}"
+            name="${dir#./}"
+            name="${name//\//-}"  # Sanitize image name
+            matrix=$(jq -c --arg dir "$dir" --arg image "$name" --arg tag "$tag" '. += [{"directory": $dir, "image": $image, "tag": $tag}]' <<< "$matrix")
+          done
+
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
+      - name: Output Matrix
+        run: |
+          echo "Matrix: ${{ steps.set-matrix.outputs.matrix }}"
+
+  build-images:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.matrix != '[]' && needs.detect-changes.outputs.matrix != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+    name: Build Docker image for ${{ matrix.image }}
+    uses: girishcodealchemy/gh-action-alchemy/.github/workflows/kaniko-gcp-nonprod.yml@main
+    with:
+      runner: nonprod-linux-x64-medium
+      workingDirectory: ${{ matrix.directory }}
+      environment: nonprod
+      dockerfile: ${{ matrix.directory }}/Dockerfile
+      context: ${{ matrix.directory }}
+      registry: gcr.io/YOUR_PROJECT_ID
+      image: ${{ matrix.image }}
+      imageName: ${{ matrix.image }}
+      tag: ${{ matrix.tag }}
+      push: 'true'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
